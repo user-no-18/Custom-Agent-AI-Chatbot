@@ -1,134 +1,147 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Paperclip, X, Bot, User } from 'lucide-react';
 
-// ==================== TYPE DEFINITIONS ====================
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  files?: string[];
 }
 
-// ==================== HEADER COMPONENT ====================
-const ChatHeader = () => {
-  return (
-    <div className="sticky top-0 z-10 bg-black/95 border-b border-cyan-500/20 backdrop-blur-xl">
-      <div className="flex items-center gap-3 p-4">
-        <div className="relative">
-          {/* Animated ring */}
-          <div className="absolute inset-0 rounded-full bg-cyan-500/20 animate-pulse"></div>
-          <div className="absolute inset-0 rounded-full border-2 border-cyan-500/50 animate-spin-slow"></div>
-          
-          {/* Avatar */}
-          <div className="relative w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/50 transform hover:scale-110 transition-transform duration-300">
-            <Bot className="w-7 h-7 text-white" />
-          </div>
-          
-          {/* Status indicator */}
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-cyan-400 rounded-full border-2 border-black animate-pulse shadow-lg shadow-cyan-400/50"></div>
-        </div>
-        
-        <div>
-          <h1 className="text-xl font-bold text-cyan-400 tracking-wide">JARVIS</h1>
-          <p className="text-xs text-cyan-500/70 font-mono">Just A Rather Very Intelligent System</p>
-        </div>
-      </div>
-      
-      {/* Scan line effect */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-scan"></div>
-    </div>
-  );
-};
+// PDF Extractor
+async function extractPDFText(file: File): Promise<string> {
+  try {
+    console.log(' Extracting PDF:', file.name);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/api/extract-pdf', {
+      method: 'POST',
+      body: formData,
+    });
 
-// ==================== MESSAGE BUBBLE COMPONENT ====================
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.text) {
+      throw new Error('No text extracted');
+    }
+    
+    console.log(` Extracted ${data.text.length} characters`);
+    return data.text;
+  } catch (error: any) {
+    console.error('PDF error:', error);
+    return `[PDF: ${file.name}] - Could not extract text. Please describe what you need help with.`;
+  }
+}
+
+
 const MessageBubble = ({ message }: { message: Message }) => {
   const isBot = message.sender === 'bot';
   
   return (
-    <div className={`flex gap-3 ${isBot ? 'justify-start' : 'justify-end'} mb-6 animate-fadeIn`}>
-      {isBot && (
-        <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0 shadow-lg shadow-cyan-500/20">
-          <Bot className="w-5 h-5 text-cyan-400" />
-          <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-ping"></div>
+    <div 
+    className={`flex px-4 py-3 transition-colors border-b border-gray-800/50
+    ${isBot ? 'gap-3 justify-start' : 'gap-3 justify-end'}
+  `}>
+     
+      <div className="flex-shrink-0 pt-1">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center  ${
+          isBot 
+            ? 'bg-black' 
+            : 'bg-gray-900'
+        }`}>
+          {isBot ? (
+            <Bot className="w-10 h-10 text-white" />
+          ) : (
+            <User className="w-5 h-5 text-white" />
+          )}
         </div>
-      )}
+      </div>
+
       
-      <div className={`max-w-[75%] sm:max-w-[70%] ${isBot ? 'order-2' : 'order-1'}`}>
-        <div
-          className={`relative px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-sm transform hover:scale-[1.02] transition-all duration-300 ${
-            isBot
-              ? 'bg-gradient-to-br from-cyan-950/40 to-blue-950/40 text-cyan-100 rounded-tl-sm border border-cyan-500/30 shadow-cyan-500/10'
-              : 'bg-gradient-to-br from-cyan-600/90 to-blue-600/90 text-white rounded-tr-sm border border-cyan-400/50 shadow-cyan-400/20'
-          }`}
-        >
-          {/* Glow effect */}
-          {isBot && <div className="absolute inset-0 rounded-2xl bg-cyan-500/5 blur-xl"></div>}
-          
-          <p className="relative text-sm leading-relaxed font-light">{message.text}</p>
-          
-          {/* Corner accent */}
-          <div className={`absolute ${isBot ? 'top-0 left-0' : 'top-0 right-0'} w-2 h-2 bg-cyan-400/50 rounded-full`}></div>
-        </div>
+      <div className="flex-1 min-w-0">
         
-        <div className={`flex items-center gap-2 mt-2 px-2 ${isBot ? 'justify-start' : 'justify-end'}`}>
-          <div className="w-1 h-1 bg-cyan-500/50 rounded-full animate-pulse"></div>
-          <p className="text-xs text-cyan-500/50 font-mono">
-            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-bold text-white text-[15px]">
+            {isBot ? 'JARVIS' : 'You'}
+          </span>
+          <span className="text-gray-500 text-sm" suppressHydrationWarning>
+            · {message.timestamp.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+          </span>
         </div>
-      </div>
-      
-      {!isBot && (
-        <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
-          <User className="w-5 h-5 text-blue-400" />
-        </div>
-      )}
-    </div>
-  );
-};
 
-// ==================== TYPING INDICATOR COMPONENT ====================
-const TypingIndicator = () => {
-  return (
-    <div className="flex gap-3 justify-start mb-6 animate-fadeIn">
-      <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0 shadow-lg shadow-cyan-500/20">
-        <Bot className="w-5 h-5 text-cyan-400" />
-        <div className="absolute inset-0 rounded-full border border-cyan-500/20 animate-ping"></div>
-      </div>
-      
-      <div className="relative bg-gradient-to-br from-cyan-950/40 to-blue-950/40 px-6 py-4 rounded-2xl rounded-tl-sm border border-cyan-500/30 shadow-2xl shadow-cyan-500/10">
-        <div className="absolute inset-0 rounded-2xl bg-cyan-500/5 blur-xl"></div>
-        <div className="relative flex gap-2">
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce shadow-lg shadow-cyan-400/50" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce shadow-lg shadow-cyan-400/50" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce shadow-lg shadow-cyan-400/50" style={{ animationDelay: '300ms' }}></div>
+       
+        <div className="text-[15px] text-gray-100 leading-normal whitespace-pre-wrap break-words">
+          {message.text}
         </div>
+
+       
+        {message.files && message.files.length > 0 && (
+          <div className="mt-3 flex gap-2 flex-wrap">
+            {message.files.map((file, idx) => (
+              <div 
+                key={idx}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300"
+              >
+                <span>📄</span>
+                <span>{file}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// ==================== MAIN APP COMPONENT ====================
+const TypingIndicator = () => (
+  <div className="flex gap-3 px-4 py-3">
+    <div className="flex-shrink-0 pt-1">
+      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+        <Bot className="w-5 h-5 text-white" />
+      </div>
+    </div>
+    <div className="flex-1">
+      <div className="font-bold text-white text-[15px] mb-1">JARVIS</div>
+      <div className="flex gap-1.5">
+        <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+        <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+        <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+      </div>
+    </div>
+  </div>
+);
+
+
 export default function ChatPage() {
-  // State management - using static timestamps to prevent hydration errors
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Good evening. JARVIS at your service. How may I assist you today?',
+      text: 'Hello! I\'m JARVIS. Upload a PDF and ask me questions about it, or ask about weather, currency conversion, and more.',
       sender: 'bot',
-      timestamp: new Date('2024-01-01T12:00:00'),
+      timestamp: new Date(),
     },
   ]);
   
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [pdfContent, setPdfContent] = useState<string>('');
+  const [extracting, setExtracting] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [sessionId] = useState(() => 'session-' + Math.random().toString(36).substring(7));
 
-  // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -137,16 +150,55 @@ export default function ChatPage() {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Handle sending messages
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return;
 
-    // Create user message
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = inputRef.current.scrollHeight + 'px';
+    }
+  }, [inputText]);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const pdfFiles = files.filter(f => f.type === 'application/pdf');
+    
+    if (pdfFiles.length === 0) {
+      alert('Please select a PDF file');
+      return;
+    }
+    
+    setExtracting(true);
+    
+    try {
+      const text = await extractPDFText(pdfFiles[0]);
+      setPdfContent(text);
+      setUploadedFiles([pdfFiles[0]]);
+      
+      const uploadMsg: Message = {
+        id: Date.now().toString(),
+        text: ` PDF uploaded: ${pdfFiles[0].name}\n\nNow ask me a question about it!`,
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, uploadMsg]);
+    } catch (error: any) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setExtracting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Send message
+  const handleSendMessage = async () => {
+    if (!inputText.trim() && uploadedFiles.length === 0) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputText,
+      text: inputText || '(Asking about uploaded PDF)',
       sender: 'user',
       timestamp: new Date(),
+      files: uploadedFiles.map(f => f.name),
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -154,44 +206,38 @@ export default function ChatPage() {
     setInputText('');
     setIsTyping(true);
 
-    // ========== INTEGRATED BACKEND API CALL ==========
     try {
-      console.log('🔄 Sending message to API:', currentInput);
-      
-      // Call the Next.js API route (no longer external backend)
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           message: currentInput,
-          threadId: sessionId
-        })
+          threadId: sessionId,
+          documentContent: pdfContent || undefined,
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error(`API responded with status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
 
       const data = await response.json();
-      console.log('✅ Received response from API:', data);
       
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.response || 'I received your message but had trouble processing it.',
+        text: data.response || 'I received your message.',
         sender: 'bot',
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, botMessage]);
       
-    } catch (error) {
-      console.error('❌ Error calling API:', error);
+      setUploadedFiles([]);
+      setPdfContent('');
+    } catch (error: any) {
+      console.error('Error:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Connection error. Please ensure the system is online and try again.',
+        text: 'Connection error. Please try again.',
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -202,8 +248,7 @@ export default function ChatPage() {
     }
   };
 
-  // Handle Enter key press
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -211,126 +256,109 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black relative overflow-hidden">
-      {/* Animated background grid */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-950 to-black">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0a4a5a_1px,transparent_1px),linear-gradient(to_bottom,#0a4a5a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20"></div>
-      </div>
-      
-      {/* Radial glow effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-3xl"></div>
-      
-      {/* Custom animations */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes scan {
-          0%, 100% {
-            transform: translateX(-100%);
-          }
-          50% {
-            transform: translateX(100%);
-          }
-        }
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out;
-        }
-        .animate-scan {
-          animation: scan 3s ease-in-out infinite;
-        }
-        .animate-spin-slow {
-          animation: spin-slow 8s linear infinite;
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: rgba(0, 0, 0, 0.3);
-        }
-        ::-webkit-scrollbar-thumb {
-          background: rgba(6, 182, 212, 0.3);
-          border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: rgba(6, 182, 212, 0.5);
-        }
-      `}</style>
-      
-      {/* Header */}
-      <ChatHeader />
+    <div className="flex flex-col h-screen bg-black text-white">
+      {/* Header - X.com Style */}
+      <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+              <Bot className="w-8 h-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-[15px] font-bold leading-tight">JARVIS</h1>
+              <p className="text-[13px] text-gray-500">AI Assistant</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
-      {/* Messages Container */}
-      <div className="relative flex-1 overflow-y-auto p-4 space-y-2">
-        <div className="max-w-4xl mx-auto">
-          {messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
+      {/* Messages Area - X.com Style Feed */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-[600px] mx-auto">
+          {messages.map(msg => (
+            <MessageBubble key={msg.id} message={msg} />
           ))}
           {isTyping && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="relative border-t border-cyan-500/20 bg-black/95 backdrop-blur-xl p-4">
-        {/* Scan line */}
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500 to-transparent animate-scan"></div>
-        
-        <div className="max-w-4xl mx-auto">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 relative group">
-              {/* Glow effect on focus */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur opacity-0 group-focus-within:opacity-20 transition duration-300"></div>
-              
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Enter command..."
-                className="relative w-full px-5 py-3.5 bg-gray-950/50 border border-cyan-500/30 rounded-2xl text-cyan-100 placeholder-cyan-700/50 focus:outline-none focus:border-cyan-500/60 focus:bg-gray-950/70 transition-all duration-300 font-light backdrop-blur-sm"
-              />
-              
-              {/* Corner accents */}
-              <div className="absolute top-1 left-1 w-2 h-2 border-t border-l border-cyan-500/50 rounded-tl"></div>
-              <div className="absolute top-1 right-1 w-2 h-2 border-t border-r border-cyan-500/50 rounded-tr"></div>
-              <div className="absolute bottom-1 left-1 w-2 h-2 border-b border-l border-cyan-500/50 rounded-bl"></div>
-              <div className="absolute bottom-1 right-1 w-2 h-2 border-b border-r border-cyan-500/50 rounded-br"></div>
+      {/* Input Area - X.com Style */}
+      <div className="border-t border-gray-800 bg-black">
+        <div className="max-w-[600px] mx-auto">
+          {/* File Preview */}
+          {uploadedFiles.length > 0 && (
+            <div className="px-4 pt-3">
+              <div className="flex gap-2 flex-wrap">
+                {uploadedFiles.map((file, idx) => (
+                  <div 
+                    key={idx} 
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm"
+                  >
+                    <span>📄 {file.name}</span>
+                    <button 
+                      onClick={() => setUploadedFiles(prev => prev.filter((_, i) => i !== idx))}
+                      className="text-gray-400 hover:text-white transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-            
-            <button
-              onClick={handleSendMessage}
-              disabled={!inputText.trim()}
-              className="relative p-3.5 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-2xl text-white hover:from-cyan-500 hover:to-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg shadow-cyan-500/30 border border-cyan-400/50 group"
-            >
-              {/* Button glow */}
-              <div className="absolute inset-0 bg-cyan-400/20 rounded-2xl blur group-hover:blur-md transition-all duration-300"></div>
-              <Send className="relative w-5 h-5" />
-            </button>
-          </div>
+          )}
           
-          <p className="text-xs text-cyan-600/40 mt-3 text-center font-mono">
-            SYSTEM READY • AWAITING INPUT
-          </p>
+          {/* Extracting Status */}
+          {extracting && (
+            <div className="px-4 pt-3 text-sm text-gray-500">
+              🔄 Extracting PDF text...
+            </div>
+          )}
+          
+          {/* Input Row */}
+          <div className="p-4">
+            <div className="flex items-end gap-2 bg-gray-900 border border-gray-800 rounded-full px-4 py-2 focus-within:border-blue-600 transition">
+              {/* Attach Button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={extracting}
+                className="flex-shrink-0 p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Attach PDF"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf"
+                onChange={handleFileSelect}
+                disabled={extracting}
+                className="hidden"
+              />
+
+              {/* Text Input */}
+              <textarea
+                ref={inputRef}
+                value={inputText}
+                onChange={e => setInputText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="What's on your mind?"
+                rows={1}
+                className="flex-1 bg-transparent text-white placeholder-gray-600 outline-none resize-none max-h-32 py-2 text-[15px]"
+              />
+
+              {/* Send Button */}
+              <button
+                onClick={handleSendMessage}
+                disabled={(!inputText.trim() && uploadedFiles.length === 0) || isTyping}
+                className="flex-shrink-0 p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-full transition"
+                title="Send"
+              >
+                <Send className="w-5 h-5 text-white" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
