@@ -25,7 +25,7 @@ export default function HomePage() {
               <div className="w-8 h-8 rounded-full  bg-blue-100 flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">JARVIS</span>
+              <span className="text-lg font-bold">JARVIS 0.5</span>
             </div>
             <Link href="/chat">
               <button className="px-4 py-2 bg-blue-100 hover:bg-blue-700 rounded-full text-sm font-semibold transition border-[#ffffff] border-2">
@@ -59,6 +59,8 @@ export default function HomePage() {
             <span style={{ color: "#5B21B6" }}>V</span>
             <span style={{ color: "#7C3AED" }}>I</span>
             <span style={{ color: "#A78BFA" }}>S</span>
+            <span className="hidden md:inline" style={{ color: "#A78BFA" }}> 0.5</span>
+            
           </h1>
 
         

@@ -257,7 +257,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white">
-      {/* Header - X.com Style */}
+     
       <header className="sticky top-0 z-10 bg-black/80 backdrop-blur-md border-b border-gray-800">
         <div className="px-4 py-3">
           <div className="flex items-center gap-3">
@@ -265,14 +265,14 @@ export default function ChatPage() {
               <Bot className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-[15px] font-bold leading-tight">JARVIS</h1>
-              <p className="text-[13px] text-gray-500">AI Assistant</p>
+              <h1 className="text-[15px] font-bold leading-tight">JARVIS 0.5</h1>
+              <p className="text-[13px] text-gray-500">AI Assistant Chatbot</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Messages Area - X.com Style Feed */}
+     
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-[600px] mx-auto">
           {messages.map(msg => (
@@ -283,10 +283,10 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input Area - X.com Style */}
+     
       <div className="border-t border-gray-800 bg-black">
         <div className="max-w-[600px] mx-auto">
-          {/* File Preview */}
+          
           {uploadedFiles.length > 0 && (
             <div className="px-4 pt-3">
               <div className="flex gap-2 flex-wrap">
@@ -308,17 +308,17 @@ export default function ChatPage() {
             </div>
           )}
           
-          {/* Extracting Status */}
+          
           {extracting && (
             <div className="px-4 pt-3 text-sm text-gray-500">
               🔄 Extracting PDF text...
             </div>
           )}
           
-          {/* Input Row */}
+          
           <div className="p-4">
             <div className="flex items-end gap-2 bg-gray-900 border border-gray-800 rounded-full px-4 py-2 focus-within:border-blue-600 transition">
-              {/* Attach Button */}
+            
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={extracting}
@@ -348,7 +348,7 @@ export default function ChatPage() {
                 className="flex-1 bg-transparent text-white placeholder-gray-600 outline-none resize-none max-h-32 py-2 text-[15px]"
               />
 
-              {/* Send Button */}
+            
               <button
                 onClick={handleSendMessage}
                 disabled={(!inputText.trim() && uploadedFiles.length === 0) || isTyping}
