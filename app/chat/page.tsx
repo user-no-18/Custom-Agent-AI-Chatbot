@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, Bot,BotMessageSquare, User } from 'lucide-react';
+import { uploadPDFForOCR } from '../lib/pdf';
 
 interface Message {
   id: string;
@@ -170,7 +171,8 @@ export default function ChatPage() {
     setExtracting(true);
     
     try {
-      const text = await extractPDFText(pdfFiles[0]);
+      const text = await uploadPDFForOCR(pdfFiles[0]);
+      console.log(text);
       setPdfContent(text);
       setUploadedFiles([pdfFiles[0]]);
       
@@ -311,7 +313,7 @@ export default function ChatPage() {
           
           {extracting && (
             <div className="px-4 pt-3 text-sm text-gray-500">
-              🔄 Extracting PDF text...
+              🔄 uploading document...
             </div>
           )}
           
