@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, Bot, User } from 'lucide-react';
+import { Send, Paperclip, X, Bot,BotMessageSquare, User } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -59,7 +59,7 @@ const MessageBubble = ({ message }: { message: Message }) => {
             : 'bg-gray-900'
         }`}>
           {isBot ? (
-            <Bot className="w-10 h-10 text-white" />
+            <BotMessageSquare className="w-10 h-10 text-white" />
           ) : (
             <User className="w-5 h-5 text-white" />
           )}
@@ -105,8 +105,8 @@ const MessageBubble = ({ message }: { message: Message }) => {
 const TypingIndicator = () => (
   <div className="flex gap-3 px-4 py-3">
     <div className="flex-shrink-0 pt-1">
-      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-        <Bot className="w-5 h-5 text-white" />
+      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
+        <BotMessageSquare className="w-5 h-5 text-white" />
       </div>
     </div>
     <div className="flex-1">
