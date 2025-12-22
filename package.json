@@ -16,7 +16,7 @@
     "@langchain/langgraph": "^1.0.0",
     "@langchain/tavily": "^1.0.0",
     "lucide-react": "^0.545.0",
-    "next": "15.5.4",
+    "next": "15.5.9",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.4.394",
     "react": "19.1.0",
