@@ -479,21 +479,7 @@ MIT License - See LICENSE file for details
 
 ---
 
-## 🔗 Links
 
-- **Documentation:** [Link to docs]
-- **Issues:** [Link to issues]
-- **Demo:** [Link to live demo]
-
----
-
-## 📞 Support
-
-For questions or issues:
-- Open an issue on GitHub
-- Email: your-email@example.com
-
----
 
 **Built with ❤️ for learning and practice**
 
